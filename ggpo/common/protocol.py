@@ -87,6 +87,8 @@ class Protocol:
 
     @staticmethod
     def packTLV(data):
+        if hasattr(data, 'encode'):
+            data = data.encode()
         return struct.pack("!I", len(data)) + data
 
     @staticmethod
@@ -99,6 +101,8 @@ class Protocol:
         """
         length = Protocol.unpackInt(data[:4])
         value = data[4:length + 4]
+        if hasattr(value, 'decode'):
+            value = value.decode()
         return value, data[length + 4:]
 
     @staticmethod

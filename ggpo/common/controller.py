@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import cgi
+import configparser
+import html
 import os
 import sys
 import re
@@ -12,7 +13,7 @@ import fileinput
 from shutil import copyfile
 from random import randint
 from subprocess import Popen
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 from ggpo.common.runtime import *
 from ggpo.common.geolookup import geolookup, isUnknownCountryCode
 from ggpo.common.player import Player
@@ -61,7 +62,7 @@ class Controller(QtCore.QObject):
         self.sequence = 0x1
         self.tcpSock = None
         self.tcpConnected = False
-        self.tcpData = ''
+        self.tcpData = b''
         self.tcpReadState = self.STATE_TCP_READ_LEN
         self.tcpResponseLen = 0
         self.tcpCommandsWaitingForResponse = dict()
@@ -142,7 +143,7 @@ class Controller(QtCore.QObject):
     def checkRom(self):
         if self.channel == 'unsupported':
             return True
-        if self.channel and self.channel != "lobby":
+        if self.channel and self.channel != 'lobby':
             romdir=Settings.value(Settings.ROMS_DIR)
             if romdir:
                 rom = os.path.join(romdir, "{}.zip".format(self.rom))
@@ -171,20 +172,22 @@ class Controller(QtCore.QObject):
 
     def connectTcp(self):
         self.tcpConnected = False
-        #noinspection PyBroadException
+        # noinspection PyBroadException
         try:
             if self.tcpSock:
                 self.tcpSock.close()
             self.tcpSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.channelport = Settings.value(Settings.PORT)
-            if self.channelport==None:
+            if self.channelport is None:
                 self.channelport = 7000
                 Settings.setValue(Settings.PORT, int(self.channelport))
-            self.tcpSock.connect(('ggpo-ng.com', int(self.channelport),))
+            # self.tcpSock.connect(('ggpo-ng.com', int(self.channelport),))
+            self.tcpSock.connect(('dev.ventura.pw', int(self.channelport),))
             self.tcpConnected = True
         except Exception:
             self.sigStatusMessage.emit("Cannot connect to FightCade server")
             self.sigServerDisconnected.emit()
+
         return self.tcpConnected
 
     def connectUdp(self, port):
@@ -310,12 +313,12 @@ class Controller(QtCore.QObject):
             extrainfo = '({}) '.format(extrainfo)
         line = self.getPlayerPrefix(name, True)
         line += " challenged you - " + extrainfo
-	if "'" not in name:
-		line += "<a href='accept:" + name + "'><font color=green>accept</font></a>"
-		line += " / <a href='decline:" + name + "'><font color=green>decline</font></a>"
-	else:
-		line += '<a href="accept:' + name + '"><font color=green>accept</font></a>'
-		line += ' / <a href="decline:' + name + '"><font color=green>decline</font></a>'
+        if "'" not in name:
+            line += "<a href='accept:" + name + "'><font color=green>accept</font></a>"
+            line += " / <a href='decline:" + name + "'><font color=green>decline</font></a>"
+        else:
+            line += '<a href="accept:' + name + '"><font color=green>accept</font></a>'
+            line += ' / <a href="decline:' + name + '"><font color=green>decline</font></a>'
         return line
 
     def getPlayerColor(self, name):
@@ -342,9 +345,9 @@ class Controller(QtCore.QObject):
             if icon==None:
                 icon=''
         if useFlag:
-            return '{}<b><font color="{}">{}</font></b> '.format(icon, c, cgi.escape('<{}>'.format(name)))
+            return '{}<b><font color="{}">{}</font></b> '.format(icon, c, html.escape('<{}>'.format(name)))
         else:
-            return '<b><font color="{}">{}</font></b> '.format(c, cgi.escape('<{}>'.format(name)))
+            return '<b><font color="{}">{}</font></b> '.format(c, html.escape('<{}>'.format(name)))
 
 
     def ggpoPathJoin(self, *args):
@@ -454,10 +457,12 @@ class Controller(QtCore.QObject):
         if name in self.ignored:
             return
         msg, data = Protocol.extractTLV(data)
-        try:
-            msg = msg.decode('utf-8')
-        except ValueError:
-            msg = msg
+
+        if hasattr(name, 'decode'):
+            name = name.decode()
+        if hasattr(msg, 'decode'):
+            msg = msg.decode()
+
         if Settings.value(Settings.USER_LOG_CHAT):
             loguser().info(u"<{}> {}".format(name, msg))
         self.sigChatReceived.emit(name, msg)
@@ -555,6 +560,8 @@ class Controller(QtCore.QObject):
         self.awayfromkb[p1] = True
         self.available.pop(p1, None)
         self.playing.pop(p1, None)
+        if hasattr(p1, 'decode'):
+            p1 = p1.decode()
         self.sigPlayerStateChange.emit(p1, PlayerStates.AFK)
 
     def parsePlayerAvailableResponse(self, p1, playerinfo):
@@ -562,6 +569,8 @@ class Controller(QtCore.QObject):
         self.available[p1] = True
         self.awayfromkb.pop(p1, None)
         self.playing.pop(p1, None)
+        if hasattr(p1, 'decode'):
+            p1 = p1.decode()
         self.sigPlayerStateChange.emit(p1, PlayerStates.AVAILABLE)
 
     def parsePlayerLeftResponse(self, p1):
@@ -573,6 +582,8 @@ class Controller(QtCore.QObject):
                 self.challengers.remove(p1)
             if p1 == self.challenged:
                 self.challenged = None
+            if hasattr(p1, 'decode'):
+                p1 = p1.decode()
             self.sigPlayerStateChange.emit(p1, PlayerStates.QUIT)
 
     def parsePlayerStartGameResponse(self, p1, p2, playerinfo):
@@ -767,7 +778,7 @@ class Controller(QtCore.QObject):
             if fbaini and os.path.isfile(fbaini):
                 for line in fileinput.input(fbaini, inplace=True, backup='.bak'):
                     new="szAppRomPaths[7] "+str(os.path.join(romdir.upper(),'')+"\\")
-                    sys.stdout.write(re.sub("szAppRomPaths\[7\].*", new, line))
+                    sys.stdout.write(re.sub(r"szAppRomPaths\[7\].*", new, line))
                 fileinput.close()
 
     def runFBA(self, quark):
@@ -798,7 +809,7 @@ class Controller(QtCore.QObject):
         logdebug().info(" ".join(args))
 
         if Settings.value(Settings.COMPOSITION_DISABLED):
-                self.desktopComposition(0)
+            self.desktopComposition(0)
 
         try:
             # starting python from cmd.exe and redirect stderr and we got
@@ -810,7 +821,7 @@ class Controller(QtCore.QObject):
                 devnull = open(os.devnull, 'w')
                 Popen(args, stdout=devnull, stderr=devnull)
                 devnull.close()
-        except OSError, ex:
+        except OSError as ex:
             self.sigStatusMessage.emit("Error executing " + " ".join(args) + "\n" + repr(ex))
 
         # backup FBA settings
@@ -835,8 +846,8 @@ class Controller(QtCore.QObject):
             # http://stackoverflow.com/questions/13414029/catch-interrupted-system-call-in-threading
             try:
                 inputready, outputready, exceptready = select.select(inputs, [], [], self.selectTimeout)
-            except select.error, ex:
-                if ex[0] != errno.EINTR and ex[0] != errno.EBADF:
+            except select.error as ex:
+                if ex.args[0] != errno.EINTR and ex.args[0] != errno.EBADF:
                     raise
             if not inputready:
                 self.sendPingQueries()
@@ -885,12 +896,12 @@ class Controller(QtCore.QObject):
             self.sendAndRemember(Protocol.ACCEPT_CHALLENGE, Protocol.packTLV(name) + Protocol.packTLV(self.rom))
             self.challengers.remove(name)
 
-    def sendAndForget(self, command, data=''):
+    def sendAndForget(self, command, data=b''):
         logdebug().info('Sending {} seq {} {}'.format(Protocol.codeToString(command), self.sequence, repr(data)))
         self.sendtcp(struct.pack('!I', command) + data)
 
-    def sendAndRemember(self, command, data=''):
-        logdebug().info('Sending {} seq {} {}'.format(Protocol.codeToString(command), self.sequence, repr(data)))
+    def sendAndRemember(self, command, data=b''):
+        logdebug().info('Sending [{}]{} seq {} {}'.format(command, Protocol.codeToString(command), self.sequence, repr(data)))
         self.tcpCommandsWaitingForResponse[self.sequence] = command
         self.sendtcp(struct.pack('!I', command) + data)
 
@@ -901,7 +912,7 @@ class Controller(QtCore.QObject):
         except:
             port=6009
             #raise
-        authdata = Protocol.packTLV(username) + Protocol.packTLV(password) + Protocol.packInt(port) + Protocol.packInt(copyright.versionNum())
+        authdata = Protocol.packTLV(username.encode()) + Protocol.packTLV(password.encode()) + Protocol.packInt(port) + Protocol.packInt(copyright.versionNum())
         self.sendAndRemember(Protocol.AUTH, authdata)
 
     def sendCancelChallenge(self, name=None):
@@ -971,7 +982,7 @@ class Controller(QtCore.QObject):
 
     def sendPingQueries(self):
         if self.udpConnected:
-            for name in self.available.keys() + self.awayfromkb.keys() + self.playing.keys():
+            for name in list(self.available.keys()) + list(self.awayfromkb.keys()) + list(self.playing.keys()):
                 p = self.players[name]
                 self.sendPingQuery(p)
 
@@ -1008,14 +1019,14 @@ class Controller(QtCore.QObject):
         Settings.setBoolean(Settings.AWAY, state)
 
     def sendWelcome(self):
-        self.sendAndRemember(Protocol.WELCOME, '\x00\x00\x00\x00\x00\x00\x00\x1d\x00\x00\x00\x01')
+        self.sendAndRemember(Protocol.WELCOME, b'\x00\x00\x00\x00\x00\x00\x00\x1d\x00\x00\x00\x01')
 
     def sendtcp(self, msg):
         # length of whole packet = length of sequence + length of msg
         payloadLen = 4 + len(msg)
         # noinspection PyBroadException
         try:
-            self.tcpSock.send(struct.pack('!II', payloadLen, self.sequence) + str(msg))
+            self.tcpSock.send(struct.pack('!II', payloadLen, self.sequence) + msg)
         except:
             self.tcpConnected = False
             self.selectLoopRunning = False

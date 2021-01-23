@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import cgi
-from PyQt4 import QtGui
-from PyQt4.QtCore import QFile, QIODevice
+import html
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import QFile, QIODevice
 from ggpo.common.settings import Settings
 
 
@@ -75,8 +75,8 @@ class ColorTheme:
 
     @classmethod
     def saveDefaultStyle(cls):
-        cls.originalStyle = QtGui.QApplication.style().objectName()
-        cls.originalPalette = QtGui.QApplication.palette()
+        cls.originalStyle = QtWidgets.QApplication.style().objectName()
+        cls.originalPalette = QtWidgets.QApplication.palette()
 
     @staticmethod
     def setDarkTheme(boolean):
@@ -93,9 +93,9 @@ class ColorTheme:
             except:
                 qss = ''
                 pass
-            QtGui.QApplication.setStyle(ColorTheme.originalStyle)
-            QtGui.QApplication.setPalette(ColorTheme.originalPalette)
-            QtGui.QApplication.instance().setStyleSheet(qss)
+            QtWidgets.QApplication.setStyle(ColorTheme.originalStyle)
+            QtWidgets.QApplication.setPalette(ColorTheme.originalPalette)
+            QtWidgets.QApplication.instance().setStyleSheet(qss)
 
     @staticmethod
     def setGNGTheme(boolean):
@@ -112,23 +112,23 @@ class ColorTheme:
             except:
                 qss = ''
                 pass
-            QtGui.QApplication.setStyle(ColorTheme.originalStyle)
-            QtGui.QApplication.setPalette(ColorTheme.originalPalette)
-            QtGui.QApplication.instance().setStyleSheet(qss)
+            QtWidgets.QApplication.setStyle(ColorTheme.originalStyle)
+            QtWidgets.QApplication.setPalette(ColorTheme.originalPalette)
+            QtWidgets.QApplication.instance().setStyleSheet(qss)
 
     @staticmethod
     def setNormalTheme(boolean):
         if boolean:
             ColorTheme.SELECTED = ColorTheme.LIGHT
-            QtGui.QApplication.setStyle(ColorTheme.originalStyle)
-            QtGui.QApplication.setPalette(ColorTheme.originalPalette)
+            QtWidgets.QApplication.setStyle(ColorTheme.originalStyle)
+            QtWidgets.QApplication.setPalette(ColorTheme.originalPalette)
             Settings.setValue(Settings.COLORTHEME, '')
-            QtGui.QApplication.instance().setStyleSheet('')
+            QtWidgets.QApplication.instance().setStyleSheet('')
 
     @staticmethod
     def statusHtml(txt):
         if txt:
-            txt = cgi.escape(txt)
+            txt = html.escape(txt)
             txt = txt.replace("\n", "<br/>")
             return '<font color="#808080">' + txt + "</font>"
 

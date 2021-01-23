@@ -5,9 +5,9 @@ import logging.handlers
 import os
 import re
 import sys
-import urllib2
+import urllib.request
 from collections import defaultdict
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore
 from ggpo.common.runtime import *
 from ggpo.common.settings import Settings
 from ggpo.common import copyright
@@ -15,14 +15,14 @@ from os.path import expanduser
 
 
 def checkUpdate():
-    versionurl = 'https://raw.github.com/poliva/pyqtggpo/master/VERSION'
-    #noinspection PyBroadException
+    versionurl = 'https://raw.github.com/fcoventuraa/pyqtggpo/master/VERSION'
+    # noinspection PyBroadException
     try:
-        response = urllib2.urlopen(versionurl, timeout=2)
+        response = urllib.request.urlopen(versionurl, timeout=2)
         latestVersion = int(response.read().strip())
         return latestVersion - int(copyright.__version__)
     except:
-        pass
+        return 0
 
 
 def defaultdictinit(startdic):
@@ -142,11 +142,14 @@ def replaceURLs(text):
     return re.sub(r'(https?:\/\/\S+)',
                   r'<a href="\1"><font color=green>\1</font></a>', text)
 
+
 def replaceReplayID(text):
     return re.sub(r'(challenge\-[0-9]{4}\-[0-9]{10,11}[.][0-9]{2}(\@[a-z0-9_]+)?)',r'<a href="replay:\1"><font color=green>\1</font></a>',text)
 
+
 def nl2br(s):
     return '<br/>\n'.join(s.split('\n'))
+
 
 def sha256digest(fname):
     return hashlib.sha256(open(fname, 'rb').read()).hexdigest()

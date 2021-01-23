@@ -2,8 +2,9 @@
 from glob import glob
 import fnmatch
 import os
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import Qt
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QAbstractItemView
 import operator
 from ggpo.common.allgames import allgames
 from ggpo.common.settings import Settings
@@ -94,21 +95,21 @@ class SavestatesModel(QtCore.QAbstractTableModel):
         self.lastSortDirection = order
         getter = operator.itemgetter(col)
         keyfunc = lambda x: getter(x).lower()
-        self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
+        self.layoutAboutToBeChanged.emit()
         self.filteredGames.sort(key=keyfunc, reverse=reverse)
-        self.emit(QtCore.SIGNAL("layoutChanged()"))
+        self.layoutChanged.emit()
 
 
-class SavestatesDialog(QtGui.QDialog, Ui_SavestatesDialog):
+class SavestatesDialog(QDialog, Ui_SavestatesDialog):
     def __init__(self, *args, **kwargs):
         super(SavestatesDialog, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.fsfile = None
-        self.uiButtonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+        self.uiButtonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.model = SavestatesModel()
         self.uiSavestatesTblv.setModel(self.model)
-        self.uiSavestatesTblv.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        self.uiSavestatesTblv.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.uiSavestatesTblv.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.uiSavestatesTblv.setSelectionMode(QAbstractItemView.SingleSelection)
         self.connectSignals()
         self.setDefaultColumns()
         self.uiSavestatesTblv.setSortingEnabled(True)
@@ -158,7 +159,7 @@ class SavestatesDialog(QtGui.QDialog, Ui_SavestatesDialog):
             sm.select(endIdx, QtGui.QItemSelectionModel.Select | QtGui.QItemSelectionModel.Rows)
 
     def onSelectionChanged(self):
-        self.uiButtonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(
+        self.uiButtonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(
             self.uiSavestatesTblv.selectionModel().hasSelection())
 
     def restoreStateAndGeometry(self):

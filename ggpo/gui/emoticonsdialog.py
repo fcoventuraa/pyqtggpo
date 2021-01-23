@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QApplication, QLayout, QDialog, QAction, QToolButton
 from ggpo.common.runtime import *
 from ggpo.common.settings import Settings
 
-class FlowLayout(QtGui.QLayout):
+class FlowLayout(QLayout):
     def __init__(self, parent=None, margin=10, spacing=-1):
         super(FlowLayout, self).__init__(parent)
 
         if parent is not None:
-            self.setMargin(margin)
+            self.setContentsMargins(margin, margin, margin, margin)
 
         self.setSpacing(spacing)
 
@@ -61,7 +62,7 @@ class FlowLayout(QtGui.QLayout):
         for item in self.itemList:
             size = size.expandedTo(item.minimumSize())
 
-        size += QtCore.QSize(2 * self.margin(), 2 * self.margin())
+        size += QtCore.QSize(2 * self.contentsMargins().top(), 2 * self.contentsMargins().top())
         return size
 
     def doLayout(self, rect, testOnly):
@@ -71,10 +72,10 @@ class FlowLayout(QtGui.QLayout):
 
         for item in self.itemList:
             wid = item.widget()
-            spaceX = self.spacing() + wid.style().layoutSpacing(QtGui.QSizePolicy.PushButton,
-                                                                QtGui.QSizePolicy.PushButton, QtCore.Qt.Horizontal)
-            spaceY = self.spacing() + wid.style().layoutSpacing(QtGui.QSizePolicy.PushButton,
-                                                                QtGui.QSizePolicy.PushButton, QtCore.Qt.Vertical)
+            spaceX = self.spacing() + wid.style().layoutSpacing(QtWidgets.QSizePolicy.PushButton,
+                                                                QtWidgets.QSizePolicy.PushButton, QtCore.Qt.Horizontal)
+            spaceY = self.spacing() + wid.style().layoutSpacing(QtWidgets.QSizePolicy.PushButton,
+                                                                QtWidgets.QSizePolicy.PushButton, QtCore.Qt.Vertical)
             nextX = x + item.sizeHint().width() + spaceX
             if nextX - spaceX > rect.right() and lineHeight > 0:
                 x = rect.x()
@@ -169,7 +170,7 @@ O.o
 ←↙↓↘→↗↑↖'''
 
 
-class EmoticonDialog(QtGui.QDialog):
+class EmoticonDialog(QDialog):
     def __init__(self, *args, **kwargs):
         super(EmoticonDialog, self).__init__(*args, **kwargs)
         saved = Settings.value(Settings.EMOTICON_DIALOG_GEOMETRY)
@@ -185,9 +186,9 @@ class EmoticonDialog(QtGui.QDialog):
         else:
             customEmoticons = []
         for emoticon in customEmoticons + _emoticons.split("\n"):
-            act = QtGui.QAction(emoticon, self)
+            act = QAction(emoticon, self)
             act.triggered.connect(self.onActionTriggered)
-            btn = QtGui.QToolButton(self)
+            btn = QToolButton(self)
             btn.setDefaultAction(act)
             flowLayout.addWidget(btn)
         self.setLayout(flowLayout)
@@ -206,10 +207,11 @@ class EmoticonDialog(QtGui.QDialog):
     def value(self):
         return self._value
 
+
 if __name__ == '__main__':
     import sys
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     mainWin = EmoticonDialog()
     mainWin.show()
     sys.exit(app.exec_())

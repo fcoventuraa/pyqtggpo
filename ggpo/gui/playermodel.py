@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import operator
 
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import Qt
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtCore import Qt
 
 
 #noinspection PyClassHasNoInit
@@ -237,7 +237,7 @@ class PlayerModel(QtCore.QAbstractTableModel):
                 keyfunc = lambda x: getter(x).lower()
             else:
                 keyfunc = getter
-            self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
+            self.layoutAboutToBeChanged.emit()
             self.players = sorted(self.players, key=keyfunc, reverse=reverse)
             self.players = sorted(self.players, key=operator.itemgetter(PlayerModel.STATE))
-            self.emit(QtCore.SIGNAL("layoutChanged()"))
+            self.layoutChanged.emit()

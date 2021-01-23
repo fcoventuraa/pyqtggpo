@@ -5,9 +5,10 @@ import json
 import os
 import re
 import urllib
-import urllib2
+import urllib.parse
+import urllib.request
 import time
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 from ggpo.common.util import logdebug, findGamesavesDir, sha256digest
 
 
@@ -19,7 +20,7 @@ def readLocalJsonDigest():
         if os.path.isfile(localjson):
             # noinspection PyBroadException
             try:
-                localJsonDigest = json.load(file(localjson).read())
+                localJsonDigest = json.load(open(localjson).read())
             except:
                 pass
         if not localJsonDigest:
@@ -68,7 +69,7 @@ class SyncWorker(QtCore.QObject):
         try:
             # gotta love CPython's GIL, yield thread
             time.sleep(0.05)
-            response = urllib2.urlopen(self.SAVESTATES_INDEX_URL, timeout=3)
+            response = urllib.request.urlopen(self.SAVESTATES_INDEX_URL, timeout=3)
             games = json.load(response)
 
             for filename, shahash in games.items():
@@ -86,8 +87,8 @@ class SyncWorker(QtCore.QObject):
                 if not self.checkonly:
                     time.sleep(0.05)
                     localfile = os.path.join(d, filename)
-                    fileurl = self.SAVESTATES_GITHUB_BASE_URL + urllib.quote(filename)
-                    urllib.urlretrieve(fileurl, localfile)
+                    fileurl = self.SAVESTATES_GITHUB_BASE_URL + urllib.parse.quote(filename)
+                    urllib.request.urlretrieve(fileurl, localfile)
                     self.sigStatusMessage.emit('Downloaded {}'.format(localfile))
                     # remove config/games/<game>.fs
                     gamefs=os.path.abspath(os.path.join(d,"..","config","games",filename.replace("_ggpo.fs",".fs")))
@@ -105,7 +106,7 @@ class SyncWorker(QtCore.QObject):
                     self.sigStatusMessage.emit(
                         '{} files are current, added {}, updated {}'.format(
                             self.nochange, self.added, self.updated))
-        except Exception, ex:
+        except Exception as ex:
             logdebug().error(str(ex))
         self.sigFinished.emit(self.added, self.updated, self.nochange)
 

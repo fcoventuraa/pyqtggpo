@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from PyQt4.QtCore import Qt, QAbstractItemModel, QModelIndex, QEvent
-from PyQt4.QtGui import QLineEdit, QCompleter
+from PyQt5.QtCore import Qt, QAbstractItemModel, QModelIndex, QEvent
+from PyQt5.QtWidgets import QLineEdit, QCompleter
 from ggpo.common.cliclient import CLI
 from ggpo.common.playerstate import PlayerStates
 
@@ -10,7 +10,7 @@ class PlayerNameCompletionModel(QAbstractItemModel):
         super(PlayerNameCompletionModel, self).__init__(parent)
         self.controller = None
         self._prefix = ''
-        self._data = CLI.commands.keys()
+        self._data = list(CLI.commands.keys())
         self._filtered = self._data
         self._rowcount = len(self._data)
 
@@ -22,7 +22,8 @@ class PlayerNameCompletionModel(QAbstractItemModel):
             row = index.row()
             col = index.column()
             if col == 0 and 0 <= row < self.rowCount():
-                return self._filtered[row]
+                f = list(self._filtered)
+                return f[row]
 
     def index(self, row, column, parent=None, *args, **kwargs):
         if column == 0:
@@ -49,7 +50,7 @@ class PlayerNameCompletionModel(QAbstractItemModel):
             self.dataChanged.emit(self.createIndex(0, 0), self.createIndex(self._rowcount - 1, 0))
 
     def playersLoaded(self):
-        self._data = CLI.commands.keys() + \
+        self._data = list(CLI.commands.keys()) + \
                      [p for p in self.controller.available.keys()] + \
                      [p for p, p2 in self.controller.playing.items()] + \
                      [p for p in self.controller.awayfromkb.keys()]

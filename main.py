@@ -6,14 +6,10 @@ import platform
 if platform.system() == 'Darwin':
     sys.path.append("../Resources/lib/python2.7/site-packages/")
 
-import sip
-# Tell qt to return python string instead of QString
-# These are only needed for Python v2 but are harmless for Python v3.
+from PyQt5 import sip
 
-sip.setapi('QString', 2)
-sip.setapi('QVariant', 2)
-from PyQt4 import QtGui, QtCore
-QtCore.QTextCodec.setCodecForCStrings(QtCore.QTextCodec.codecForName("utf-8"))
+from PyQt5 import QtGui, QtCore, QtWidgets
+QtCore.QTextCodec.setCodecForLocale(QtCore.QTextCodec.codecForName("utf-8"))
 from ggpo.common.controller import Controller
 from ggpo.common.settings import Settings
 from ggpo.gui.colortheme import ColorTheme
@@ -28,8 +24,8 @@ def main(argv=None):
     started = False
 
     # create the application if necessary
-    if not QtGui.QApplication.instance():
-        app = QtGui.QApplication(argv)
+    if not QtWidgets.QApplication.instance():
+        app = QtWidgets.QApplication(argv)
         app.setQuitOnLastWindowClosed(True)
         app.setOrganizationName("FightCade")
         QtCore.QCoreApplication.setApplicationName("FightCade")
@@ -43,7 +39,7 @@ def main(argv=None):
     thread.start()
 
     def loggedIn():
-        if started==False:
+        if started is False:
             window = GGPOWindow()
             window.setWindowIcon(QtGui.QIcon(':/assets/icon-128.png'))
             window.setController(controller)
@@ -53,12 +49,12 @@ def main(argv=None):
             window.raise_()
             window.activateWindow()
 
-    UDP=False
-    port=6009
+    UDP = False
+    port = 6009
     while True:
         UDP = controller.connectUdp(port)
-        port=port-1
-        if (UDP==True or port < 6006):
+        port -= 1
+        if UDP is True or port < 6006:
             break
 
     logindialog = LoginDialog()

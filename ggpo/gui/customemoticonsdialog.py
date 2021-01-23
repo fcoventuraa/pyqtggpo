@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtWidgets import QApplication, QDialog
 from ggpo.common.settings import Settings
 from ggpo.gui.ui.customemoticonsdialog_ui import Ui_EmoticonDialog
 
 
-class CustomEmoticonsDialog(QtGui.QDialog, Ui_EmoticonDialog):
+class CustomEmoticonsDialog(QDialog, Ui_EmoticonDialog):
     def __init__(self, *args, **kwargs):
         super(CustomEmoticonsDialog, self).__init__(*args, **kwargs)
         self.setupUi(self)
