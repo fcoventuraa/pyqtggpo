@@ -34,7 +34,11 @@ class LoginDialog(QtWidgets.QDialog, Ui_DialogLogin):
         if username:
             self.uiUsernameLine.setText(username)
         if password:
-            self.uiPasswordLine.setText(base64.decodebytes(password).decode())
+            try:
+                password = base64.decodebytes(password).decode()
+            except:
+                password = ''
+            self.uiPasswordLine.setText(password)
         if not username and not password:
             self.uiRegisterLink.setVisible(True)
         self.uiSavePasswordChk.toggled.connect(self.savePassword)
